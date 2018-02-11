@@ -63,14 +63,10 @@ reply["?website"] = "http://llamas.haxed.net"
 reply["?radio"] = "letty.tk"
 reply["?fChanX"] = "She's young and vibrant and perfect <3"
 reply["?[n0mad]"] = "[n0mwaaad]"
-reply["?stuff"] = "?song ?wiki ?ud ?/old/new ?help"
+reply["?list"] = "?song ?wiki ?ud ?/old/new ?help"
 reply["?more"] = "No! No more!"
 reply["?duckgoose"] = "The coolest duck/goose hybrid around. He's so perfect, words can't describe his awesomeness."
-reply["?shantaram3013"] = "The cliche Asian whiz kid/horny teenager. Loves electrical engineering and hanging out on ##llamas."
+reply["?shantaram3013"] = "The cliche Asian whiz kid/emotional teenager. Loves electrical engineering and hanging out on ##llamas."
 reply["?Kremator"] = "Booo!"
-
-
-
-#
-#  fChanX test
-#
+reply["?Nawab"] = "The cool and sometimes mischievious guy next door who likes C++ and tea"
+reply["?welcome"] = "[Welcome to ##llamas] - \"Keep calm and be a llama!\" We generally talk about anything here, as long as we respect the wishes of the owner of this channel."
