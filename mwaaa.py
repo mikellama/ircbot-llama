@@ -68,3 +68,9 @@ reply["?more"] = "No! No more!"
 reply["?duckgoose"] = "The coolest duck/goose hybrid around. He's so perfect, words can't describe his awesomeness."
 reply["?shantaram3013"] = "The cliche Asian whiz kid/horny teenager. Loves electrical engineering and hanging out on ##llamas."
 reply["?Kremator"] = "Booo!"
+
+
+
+#
+#  fChanX test
+#
