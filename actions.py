@@ -38,88 +38,189 @@
 ## OF, OR IN CONNECTION WITH THE WORK OR THE USE OF OR OTHER DEALINGS IN THE WORK.
 #
 
-# import the files required for this to work
+
+##  Import the files required for this to work.
+from __future__ import division
 import requests, wikipedia
 import urbandictionary as ud
 import mwaaa
+import details
+import random
+from HTMLParser import HTMLParser
+from imdbparser import IMDb
+import sys 
 
-# define a list of commands 
-commands = ["?song", "?wiki", "?bye", "?ud", "?/"]
-commands += list(mwaaa.reply.keys())
-commands += ["PRIVMSG "+mwaaa.nick, mwaaa.updateKey]
+reload(sys)  
+sys.setdefaultencoding('utf8')
+
+##  Define a list of commands.
+listCommands = ["?song", "?ask", "?wiki", "?ud", "?imdb", "?coin", "?slap", "?calc", "?/"]
+commands = listCommands + list(mwaaa.reply.keys())
+commands += ["PRIVMSG "+details.nick, mwaaa.updateKey, "?list", "?ignore"]
+
+ignoreList = ['spammer']
 
 def act(c,msg,sender,mem):
+    '''
+    c is a command from commands list defined above
+    msg is the whole message send that contains the command trigger
+    sender is part of msg, the nick for the sender
+    mem is a list or strings containing the last few 'msg's
+    '''
+    with open('callLog', 'a') as f:
+        f.write(sender+": "+c+"\n"+msg+"\n\n")
+
     r = ""
 
-    #basic text response
-    if c in mwaaa.reply:
-        r = mwaaa.reply[c]
+    if sender not in ignoreList:
 
-    #song
-    elif c == "?song":
-        try:
-            req = requests.get("http://letty.tk:8000/rds-xml.xsl")
-            r = req.content[29:-9]
-        except:
-            r = "not now " + sender
-        #r = "This feature is disabled :("
+        ##  Basic text response.
+        if c in mwaaa.reply:
+            r = mwaaa.reply[c]
 
-    #text replacement
-    elif c == "?/":
-        if msg[-1] == '/':
-            msg = msg[:-1]
-        mfull = msg[msg.find("?/")+2:]
-        mbad = mfull[:mfull.find("/")]
-        mgood = mfull[mfull.find("/")+1:]
-        try:
-            for m in reversed(mem[:-1]):
-                if m.find(mbad) != -1 and m.find("?/") == -1:   
-                    oldSender = m[:m.find("??")]
-                    mes = m[len(oldSender)+2:]
-                    preBad = mes[:mes.find(mbad)]
-                    postBad = mes[mes.find(mbad)+len(mbad):]
-                    fixed = '"'+preBad + mgood + postBad+'"'
-                    r = "\x02"+oldSender+"\x02 meant: " +fixed
-                    if sender != oldSender:
-                        r = "\x02"+sender+'\x02 thinks ' + r
-                    return r
-        except:
-            r = "well that didn't work :/"
 
-    #urban dictionary
-    elif c == "?ud":
-        query = msg[msg.find("?ud") + 4:].replace('"',"'")
-        try:
-            defs = ud.define(query)
-            for d in defs[:3]:
-                r += d.definition.replace('\n', ' ').replace('\r', ' ')
-        except:
-            r = "well that didn't work :/"
+        ##  Song.
+        elif c == "?song":
+            try:
+                req = requests.get("http://letty.tk:8000/rds-xml.xsl")
+                h = HTMLParser()
+                r = h.unescape(req.content[29:-9])
+	        if len(r) < 3:
+		    r = "I don't hear anything."			
+            except:
+                r = "not now " + sender
+                #r = "This feature is disabled :("
 
-    #wikipedia
-    elif c == "?wiki":
-        query = msg[msg.find("?wiki") + 6:]
-        try:
-            r = wikipedia.summary(query, sentences=3)
-        except wikipedia.exceptions.DisambiguationError as e:
-            if len(e.options) > 2:
-                r = e.options[0]+", "+e.options[1]+", or "+e.options[2]+"?"
+        ##  get answer from yahoo answers.
+        elif c == "?ask":
+            try:
+                question = msg[msg.find("?ask") + 5:]
+                if len(question) > 1:
+                    h = HTMLParser()
+                    req = requests.get("http://api.haxed.net/answers/?b&q=" + question)
+                    r = h.unescape(req.content)
+	        if len(r) < 3:
+		    r = "no answer"			
+            except:
+                r = "error getting answer"
+                #r = "This feature is disabled :("
+
+        ## List of Commands
+        elif c == "?list":
+            r = " ".join(listCommands)
+
+        ## Ignore abusers
+        elif c == "?ignore" and sender in details.admins:
+            person = msg[msg.find("?ignore") + 8:]
+            if person[-1] == " ":
+                person = person[:-1]
+            if person in ignoreList:
+                ignoreList.remove(person)
+                print(ignoreList)
             else:
-                r = e.options[0]+" or "+e.options[1]+"?"
-        except wikipedia.exceptions.PageError as e2:
-            r = "Didn't find anything"
+                ignoreList.append(person)
+                print(ignoreList)
 
-    #bot driver
-    if c == "PRIVMSG "+mwaaa.nick and sender in mwaaa.admins:
-        r = msg[msg.find("PRIVMSG "+mwaaa.nick)+15:]
-    elif c == "PRIVMSG "+mwaaa.nick and msg.find("?say") != -1:
-        r = msg[msg.find("?say")+5:]
-    
-    #quit
-    if c == "?bye" and sender in mwaaa.admins:
-        exit(0)
+        ## Calculator
+        elif c == "?calc":
+            equation = msg[msg.find("?calc") + 6:].replace("^", "**")
+            try:
+                n = round(eval(equation), 4)
+                if n.is_integer():
+                    n = int(n)
+                r = str(n)
+            except:
+                r = "Is that even math?"
 
-    if c == mwaaa.updateKey:
-        reload(mwaaa)
+        ## Slap
+        elif c == "?slap":
+            audience = msg[msg.find("?slap") + 6:]
+            if len(audience) > 1:
+                r = sender + " slaps him or herself for the amusement of " + audience
+            else:
+                r = sender + " slaps him or herself."
+
+        ##  Coin Flip
+        elif c == "?coin":
+            r = random.sample(["heads", "tails"], 1)
+            r = r[0]
+
+        ##  Text replacement.
+        elif c == "?/" and msg.find(" :?/") > 1:
+            if msg[-1] == '/':
+                msg = msg[:-1]
+            mfull = msg[msg.find("?/")+2:]
+            mbad = mfull[:mfull.find("/")]
+            mgood = '\x02' + mfull[mfull.find("/")+1:] + '\x02'
+            try:
+                for m in reversed(mem[:-1]):
+                    if m.find(mbad) != -1 and m.find("?/") == -1:   
+                        oldSender = m[:m.find("??")]
+                        mes = m[len(oldSender)+2:]
+                        if mes.startswith("\x01ACTION"): # /me
+                            mes = mes[8:-1]
+                            action = True
+                        else:
+                            action = False
+                        preBad = mes[:mes.find(mbad)]
+                        postBad = mes[mes.find(mbad)+len(mbad):]
+                        fixed = preBad + mgood + postBad
+                        if action:
+                            fixed = "* \x02"+oldSender+"\x02 "+fixed
+                        else:
+                            fixed = '"'+fixed+'"'
+                        r = "\x02"+oldSender+"\x02 meant: " +fixed
+                        if sender != oldSender:
+                            r = "\x02"+sender+'\x02 thinks ' + r
+                        return r
+            except:
+	        r = "well that didn't work :/"
+
+
+        ##  Urban Dictionary.
+        elif c == "?ud":
+            try:
+                query = msg[msg.find("?ud") + 4:].replace('"',"'")
+                defs = ud.define(query)
+                for d in defs[:3]:
+                    r += d.definition.replace('\n', ' ').replace('\r', ' ')
+            except:
+                r = "well that didn't work :/"
+            if r == "":
+                r = "I didn't find anything for '"+query+"'"
+
+
+        ##  Wikipedia.
+        elif c == "?wiki":
+            try:
+                query = msg[msg.find("?wiki") + 6:]
+                r = wikipedia.summary(query, sentences=3)
+            except wikipedia.exceptions.DisambiguationError as e:
+                optionCount = min(len(e.options), 14)
+                for c, value in enumerate(e.options[:optionCount-1]):
+                    r += value+", "
+                r+= "or " +e.options[optionCount-1]+ "?"
+            except wikipedia.exceptions.PageError as e2:
+                r = "Didn't find anything"
+
+
+        ##  IMDb.
+        elif c == "?imdb":
+            imdb = IMDb()
+            title = msg[msg.find("?imdb") + 6:]
+            try:
+	        searchResult = imdb.search_movie(title)
+	        searchResult.fetch()
+	        movie = searchResult.results[0]
+	        movie.fetch()
+	        if len(searchResult.results) < 1:
+		    r = "I didn't find anything"
+	        else:
+		    r = movie.title+" ("+str(movie.year)+") "+'-'.join(movie.genres)+" ["+str(movie.rating)+"/10] "+movie.plot
+	    except:
+	        r = "something went wrong :/"
+
 
     return r.encode('utf-8')
+
+
