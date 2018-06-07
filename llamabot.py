@@ -100,4 +100,20 @@ while True:
                 except IndexError:
                     pass
 
-
+    # ?tell
+    with open("msg_store", 'r') as msg_store:
+        l_msg_store = msg_store.readlines()
+    del_msg, msg_list = [], []
+    for line in range(0, len(l_msg_store), 4):
+        if "{}\n".format(sender.lower()) == l_msg_store[line].lower():
+            del_msg.append(line)
+            msg_list.append("{} told me to tell you this, {}: {}".
+                format(l_msg_store[n + 2].rstrip(), sender, l_msg_store[n + 1].rstrip()))
+    for line in range(len(del_msg)):
+        l_msg_store[del_msg[line]-4*line : del_msg[line]+4*(1-line)] = []
+    with open("msg_store", 'w') as msg_store:
+        msg_store.write(''.join(l_msg_store))
+    if not target.lstrip('@+').startswith('#'):
+        target = sender
+    for pending in msg_list:
+        sock.send("PRIVMSG "+target+" :"+pending+"\n")

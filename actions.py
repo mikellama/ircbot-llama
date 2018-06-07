@@ -428,7 +428,12 @@ def act(c,msg,sender,mem):
         ## Send Ignore List
         elif c == "?ignoring" and sender in details.admins:
             r = ' '.join(ignoreList)
+        elif c == "?tell":
+            target_msg = msg[msg.find("?tell")+6:].split()
+            target = target_msg[0]
+            message = ' '.join(target_msg[1:])
+            with open("msg_store", 'a') as msg_store:
+                msg_store.write("{}\n{}\n{}\n\n".format(target, message, sender))
+            r = "{}: I'll tell {} that.".format(sender, target)
 
     return r.encode('utf-8')
-
-
