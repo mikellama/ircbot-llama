@@ -86,13 +86,13 @@ while True:
         reload(mwaaa)
         reload(details)
 
+    target = msg.split(' ')[2]
     for command in actions.commands:
         msgLow = msg.lower()
         if msgLow.find(command.lower()) != -1:
             r = actions.act(command, msg, sender, msgMem)
             if len(r) > 0:
                 try:
-                    target = msg.split(' ')[2]
                     if target.lstrip('@+').startswith('#'):
                         sock.send("PRIVMSG "+target+" :"+r+"\n")
                     else:
