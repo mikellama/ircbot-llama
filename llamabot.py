@@ -86,21 +86,26 @@ while True:
         reload(mwaaa)
         reload(details)
 
-    target = msg.split(' ')[2]
+    index_err = False
+    try:
+        target = msg.split(' ')[2]
+    except IndexError:
+        index_err = True
+
     for command in actions.commands:
         msgLow = msg.lower()
         if msgLow.find(command.lower()) != -1:
             r = actions.act(command, msg, sender, msgMem)
             if len(r) > 0:
-                try:
+                if not index_err:
                     if target.lstrip('@+').startswith('#'):
                         sock.send("PRIVMSG "+target+" :"+r+"\n")
                     else:
                         sock.send("PRIVMSG "+sender+" :"+r+"\n")
-                except IndexError:
-                    pass
 
     # ?tell
+    if index_err:
+        continue
     with open("msg_store", 'r') as msg_store:
         l_msg_store = msg_store.readlines()
     del_msg, msg_list = [], []
