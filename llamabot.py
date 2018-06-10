@@ -113,7 +113,7 @@ while True:
         if "{}\n".format(sender.lower()) == l_msg_store[line].lower():
             del_msg.append(line)
             msg_list.append("{} told me to tell you this, {}: {}".
-                format(l_msg_store[n + 2].rstrip(), sender, l_msg_store[n + 1].rstrip()))
+                format(l_msg_store[line+2].rstrip(), sender, l_msg_store[line+1].rstrip()))
     for line in range(len(del_msg)):
         l_msg_store[del_msg[line]-4*line : del_msg[line]+4*(1-line)] = []
     with open("msg_store", 'w') as msg_store:
